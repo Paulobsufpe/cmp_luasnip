@@ -12,10 +12,8 @@ local defaults = {
 -- require('cmp').setup { sources = { { name = 'luasnip', opts = {...} } } }
 local function init_options(params)
 	params.option = vim.tbl_deep_extend('keep', params.option, defaults)
-	vim.validate({
-		use_show_condition = { params.option.use_show_condition, 'boolean' },
-		show_autosnippets  = { params.option.show_autosnippets,  'boolean' },
-	})
+	vim.validate("use_show_condition", params.option.use_show_condition, 'boolean')
+	vim.validate("show_autosnippets", params.option.show_autosnippets,  'boolean')
 end
 
 local snip_cache = {}
@@ -37,11 +35,12 @@ local function get_documentation(snip, data)
 	local docstring = { "", "```" .. vim.bo.filetype, snip:get_docstring(), "```" }
 	local documentation = { header .. "---", (snip.dscr or ""), docstring }
 	documentation = util.convert_input_to_markdown_lines(documentation)
-	documentation = table.concat(documentation, "\n")
+	documentation = table.insert(documentation, "\n")
+	local documentation_str = table.concat(documentation)
 
 	doc_cache[data.filetype] = doc_cache[data.filetype] or {}
-	doc_cache[data.filetype][data.snip_id] = documentation
-	return documentation
+	doc_cache[data.filetype][data.snip_id] = documentation_str
+	return documentation_str
 end
 
 source.new = function()
@@ -82,7 +81,7 @@ function source:complete(params, callback)
 			end
 			for _,ele in ipairs(iter_tab) do
 				local tab,auto = unpack(ele)
-				for j, snip in pairs(tab) do
+				for _, snip in pairs(tab) do
 					if not snip.hidden then
 						ft_items[#ft_items + 1] = {
 							word = snip.trigger,
